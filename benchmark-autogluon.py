@@ -13,7 +13,7 @@ for different descriptors of molecules.
 
 Random splits may overestimate the performance of the models.
 It is better to use time-based, scaffold, or SCINS splits for the
-assessment of the model performance
+assessment of the model performance.
 
 """
 
@@ -111,7 +111,7 @@ def main():
     # Flatten MultiIndex columns from aggregation
     results_aggregated.columns = results_aggregated.columns.map("|".join).str.strip("|")
     print(results_aggregated)
-    results_aggregated.to_csv("results_aggregated.csv", index=False)
+    results_aggregated.to_csv("results_aggregated.csv")
 
     print("\nModel times:")
     print(times)

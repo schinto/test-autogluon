@@ -1,0 +1,29 @@
+name: autogluon
+channels:
+  - gwerbin
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7.10
+  - rdkit=2021.03.3
+  - xlrd=2.0.1
+  - openpyxl=3.0.7
+  - seaborn=0.11.1
+  - pandas=1.2.5
+  - jupyterlab=3.0.16
+  - notebook=6.4.0
+  - wheel=0.36.2
+  - pip=21.1.2
+  - pip:
+    - setuptools==57.0.0
+    - mxnet==1.8.0.post0
+    - autogluon==0.2.0
+    - autogluon-contrib-nlp==0.0.1b20210201
+    - autogluon-core==0.2.0
+    - autogluon-extra==0.2.0
+    - autogluon-features==0.2.0
+    - autogluon-mxnet==0.2.0
+    - autogluon-tabular==0.2.0
+    - autogluon-text==0.2.0
+    - autogluon-vision==0.2.0
+    - bokeh==2.0.1

@@ -6,3 +6,4 @@ literature/
 models/
 data/*.csv
 data/*.xls
+results/

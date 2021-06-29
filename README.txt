@@ -1,3 +1,7 @@
+Down supplementary material tx9b00338_si_001.xls with Table S1 from
+https://doi.org/10.1021/acs.chemrestox.9b00338
+and store file  in data directory
+
 # Create environment
 conda env create -f environment.yml
 

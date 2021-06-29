@@ -71,9 +71,9 @@ def evaluate_autogluon(
 
 def main():
     label_column = "Value"
-    id_columns = ["Substance", "Canonical_Smiles", "Rating"]
+    id_columns = ["Substance", "Canonical_Smiles", "Set", "Rating"]
 
-    datasets = [fname for fname in glob.glob("./data/phototox_*.csv")]
+    datasets = [fname for fname in glob.glob("./data/piv_*.csv")]
     print("\nInput datasets:")
     print(datasets)
 
@@ -100,13 +100,14 @@ def main():
 
     print("\nResults:")
     print(results)
-    results = pd.DataFrame(results)
+    # Round results to 4 digits
+    results = pd.DataFrame(results).round(4)
     results.to_csv("results.csv", index=False)
 
     print("\nAggregated results:")
     # Calculate mean and std of the model metrics evaluated on different test sets for each dataset
     results_aggregated = (
-        results.drop(columns=["fold"]).groupby("dataset").agg(["mean", "std"])
+        results.drop(columns=["fold"]).groupby("dataset").agg(["mean", "std"]).round(4)
     )
     # Flatten MultiIndex columns from aggregation
     results_aggregated.columns = results_aggregated.columns.map("|".join).str.strip("|")

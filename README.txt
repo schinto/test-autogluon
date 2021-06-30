@@ -10,6 +10,7 @@ conda activate autogluon
 
 # Create model directory used to store autogluon models
 mkdir models
+mkdir results
 
 # Start Jupyter notebook server
 jupyter notebook

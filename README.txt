@@ -14,7 +14,9 @@ mkdir models
 # Start Jupyter notebook server
 jupyter notebook
 
-# Prepare the input data using the Jupyter notebook: prepare_data.ipynb
-
-# Run benchmarks
+1. Prepare the input data using the Jupyter notebook:
+prepare_data.ipynb
+2. Build an Autogluon model using the pre-defined splits in the Set column:
+build-autogluon-model.ipynb
+3. Run 5-fold random benchmarks to compare results to the pre-defined splits:
 python benchmark-autogluon.py

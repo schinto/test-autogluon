@@ -15,8 +15,8 @@ mkdir models
 jupyter notebook
 
 1. Prepare the input data using the Jupyter notebook:
-prepare_data.ipynb
+prepare-pih-data.ipynb
 2. Build an Autogluon model using the pre-defined splits in the Set column:
-build-autogluon-model.ipynb
+build-autogluon-pih-model.ipynb
 3. Run 5-fold random benchmarks to compare results to the pre-defined splits:
-python benchmark-autogluon.py
+python benchmark-autogluon-pih-model.py

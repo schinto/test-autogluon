@@ -38,7 +38,7 @@ def evaluate_autogluon(
             path=f"./models/ag-binary-{dataset_name}-fold-{fold:02}",
             problem_type="binary",
             eval_metric="roc_auc",
-            learner_kwargs={"positive_class": 1, "ignored_columns": id_columns},
+            learner_kwargs={"positive_class": "yes", "ignored_columns": id_columns},
         )
         predictor.fit(
             # time_limit=10,
@@ -70,10 +70,10 @@ def evaluate_autogluon(
 
 
 def main():
-    label_column = "Value"
-    id_columns = ["Substance", "Canonical_Smiles", "Set", "Rating"]
+    label_column = "Photosensitation"
+    id_columns = ["Substance", "Canonical_Smiles", "Set"]
 
-    datasets = [fname for fname in glob.glob("./data/piv_*.csv")]
+    datasets = [fname for fname in glob.glob("./data/pih_*.csv")]
     print("\nInput datasets:")
     print(datasets)
 
@@ -102,7 +102,7 @@ def main():
     print(results)
     # Round results to 4 digits
     results = pd.DataFrame(results).round(4)
-    results.to_csv("results.csv", index=False)
+    results.to_csv("results/results.csv", index=False)
 
     print("\nAggregated results:")
     # Calculate mean and std of the model metrics evaluated on different test sets for each dataset
@@ -112,7 +112,7 @@ def main():
     # Flatten MultiIndex columns from aggregation
     results_aggregated.columns = results_aggregated.columns.map("|".join).str.strip("|")
     print(results_aggregated)
-    results_aggregated.to_csv("results_aggregated.csv")
+    results_aggregated.to_csv("results/results_aggregated.csv")
 
     print("\nModel times:")
     print(times)

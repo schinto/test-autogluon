@@ -19,5 +19,5 @@ jupyter notebook
 prepare-pih-data.ipynb
 2. Build an Autogluon model using the pre-defined splits in the Set column:
 build-autogluon-pih-model.ipynb
-3. Run 5-fold random benchmarks to compare results to the pre-defined splits:
+3. Run benchmarks to compare results on datasets with different feature combinations:
 python benchmark-autogluon-pih-model.py

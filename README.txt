@@ -1,16 +1,17 @@
-Down supplementary material tx9b00338_si_001.xls with Table S1 from
+# Create directories
+mkdir data
+mkdir models
+mkdir results
+
+Download supplementary material file tx9b00338_si_001.xls with Table S1 from
 https://doi.org/10.1021/acs.chemrestox.9b00338
-and store file  in data directory
+and store in data directory
 
 # Create environment
 conda env create -f environment.yml
 
 # Activate environment
 conda activate autogluon
-
-# Create model directory used to store autogluon models
-mkdir models
-mkdir results
 
 # Start Jupyter notebook server
 jupyter notebook

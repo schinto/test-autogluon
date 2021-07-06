@@ -31,11 +31,25 @@ Save file `tx9b00338_si_001.xls` in `data` directory
    `prepare-pih-data.ipynb`
 2. Build an Autogluon model using the splits provided in the `Set` column:
    `build-autogluon-pih-model.ipynb`
-3. Run benchmarks to compare results on datasets with different feature combinations:
+3. Run benchmarks to compare models using datasets with different feature combinations:
    `python benchmark-autogluon-pih-model.py`
 
 ## Notes
-- 9 SMILES in the published PIH data failed clean up steps and were excluded.
+### On article
+- Table 4 reports prediction accuracies of **85%** for the PIH data
+  using Random Decision Forest models using 224 descriptors consisting of
+  1. Quantum Mechanical descriptors:
+    9 HOMO-LUMO gap, 22 spectral integrals, 1 ionization potential (IP), electron affinities (EA) 
+  2. Pharmacophoric fingerprints:
+    191 CATS descriptors
+- Table S-6 reports as best **DNN** model performance a ROC-AUC of **0.810** for the test data
+### On benchmark with Autogluon
+- 9 SMILES in the published PIH data failed clean up steps using RDKit and were excluded.
+- A best quality fit in Autogluon using a time limit of 10 minutes.
+- The benchmark showed the highest accuracy on the test data of **78%** using
+  combined RDKit descriptors with Morgan Fingerprints of length 1024 radius 3.
+- A model using CATS descriptors alone gave an accuracy of **71%** for the test data.
+- The highest ROC-AUC of **0.8449** for the test data was achieved by model using RDKit descriptors only.
 
 ## Benchmark results
 Features|Set|ROC-AUC|Accuracy|Balanced Accuracy|Sensitivity|Specifity|MCC|F1|Precision|Recall

@@ -17,7 +17,7 @@ https://doi.org/10.1021/acs.chemrestox.9b00338
 """
 
 
-def sensitivity(df):
+def calc_sensitivity(df):
     """df contains the confusion_matrix
     as pandas DataFrame
     """
@@ -26,7 +26,7 @@ def sensitivity(df):
     return tp / (tp + fn)
 
 
-def specifity(df):
+def calc_specifity(df):
     """df contains the confusion_matrix
     as pandas DataFrame
     """
@@ -35,7 +35,9 @@ def specifity(df):
     return tn / (tn + fp)
 
 
-def evaluate_autogluon_by_set(dataset_name, data_df, label_column, id_columns):
+def evaluate_autogluon_by_set(
+    dataset_name, data_df, label_column, id_columns, time_limit=600
+):
     """Evaluate with pre-defined split from Set column"""
     # Separate train, test and external data using Set
     df = data_df.copy()
@@ -58,59 +60,48 @@ def evaluate_autogluon_by_set(dataset_name, data_df, label_column, id_columns):
         learner_kwargs={"positive_class": "yes", "ignored_columns": ignored_columns},
     )
     predictor.fit(
-        # time_limit=10,
+        time_limit=time_limit,
         train_data=train_df,
         presets="best_quality",
+        # presets="high_quality_fast_inference_only_refit",
         verbosity=0,
     )
 
     # Evaluate model on train data
-    y_pred = predictor.predict_proba(train_df.drop(columns=[label_column]))
-    y_true = train_df[label_column]
-    train_perf = predictor.evaluate_predictions(
-        y_true=y_true,
-        y_pred=y_pred,
+    train_perf = predictor.evaluate(
+        data=train_df,
         auxiliary_metrics=True,
         silent=True,
         detailed_report=True,
     )
-    # Add name to performance dictionary
     train_perf["dataset"] = dataset_name
     train_perf["Set"] = "Train"
-    train_perf["sensitivity"] = sensitivity(train_perf["confusion_matrix"])
-    train_perf["specifity"] = specifity(train_perf["confusion_matrix"])
+    train_perf["sensitivity"] = calc_sensitivity(train_perf["confusion_matrix"])
+    train_perf["specifity"] = calc_specifity(train_perf["confusion_matrix"])
 
     # Evaluate model on test data
-    y_pred = predictor.predict_proba(test_df.drop(columns=[label_column]))
-    y_true = test_df[label_column]
-    test_perf = predictor.evaluate_predictions(
-        y_true=y_true,
-        y_pred=y_pred,
+    test_perf = predictor.evaluate(
+        data=test_df,
         auxiliary_metrics=True,
         silent=True,
         detailed_report=True,
     )
-    # Add fold and name to performance dictionary
     test_perf["dataset"] = dataset_name
     test_perf["Set"] = "Test"
-    test_perf["sensitivity"] = sensitivity(test_perf["confusion_matrix"])
-    test_perf["specifity"] = specifity(test_perf["confusion_matrix"])
+    test_perf["sensitivity"] = calc_sensitivity(test_perf["confusion_matrix"])
+    test_perf["specifity"] = calc_specifity(test_perf["confusion_matrix"])
 
     # Evaluate model on External data
-    y_pred = predictor.predict_proba(ext_df.drop(columns=[label_column]))
-    y_true = ext_df[label_column]
-    ext_perf = predictor.evaluate_predictions(
-        y_true=y_true,
-        y_pred=y_pred,
+    ext_perf = predictor.evaluate(
+        data=ext_df,
         auxiliary_metrics=True,
         silent=True,
         detailed_report=True,
     )
-    # Add fold and name to performance dictionary
     ext_perf["dataset"] = dataset_name
     ext_perf["Set"] = "External"
-    ext_perf["sensitivity"] = sensitivity(ext_perf["confusion_matrix"])
-    ext_perf["specifity"] = specifity(ext_perf["confusion_matrix"])
+    ext_perf["sensitivity"] = calc_sensitivity(ext_perf["confusion_matrix"])
+    ext_perf["specifity"] = calc_specifity(ext_perf["confusion_matrix"])
 
     # Remove undesired performance metrics
     remove_keys = ("confusion_matrix", "classification_report")
@@ -119,77 +110,28 @@ def evaluate_autogluon_by_set(dataset_name, data_df, label_column, id_columns):
         test_perf.pop(k, None)
         ext_perf.pop(k, None)
 
-    # Show roc auc
-    test_score = test_perf.get("roc_auc")
-    train_score = train_perf.get("roc_auc")
-    ext_score = ext_perf.get("roc_auc")
+    # Show evaluation metric
+    metric_name = predictor.eval_metric.name
+    test_score = test_perf.get(metric_name)
+    train_score = train_perf.get(metric_name)
+    ext_score = ext_perf.get(metric_name)
     print(f"Dataset: {dataset_name}")
-    print(f"Train    ROC-AUC: {train_score:.4f}")
-    print(f"Test     ROC-AUC: {test_score:.4f}")
-    print(f"External ROC-AUC: {ext_score:.4f}")
+    print(f"Train    {metric_name}: {train_score:.4f}")
+    print(f"Test     {metric_name}: {test_score:.4f}")
+    print(f"External {metric_name}: {ext_score:.4f}")
 
     return [train_perf, test_perf, ext_perf]
-
-
-def evaluate_autogluon(
-    dataset_name, data_df, label_column, id_columns, n_splits=5, random_state=0
-):
-    """Random split evaluation"""
-    exclude_cols = [label_column] + id_columns
-    X = data_df.drop(columns=exclude_cols).values
-    y = data_df[label_column].values
-    outer_cv = StratifiedKFold(
-        n_splits=n_splits, shuffle=True, random_state=random_state
-    )
-    nested_scores = []
-    for fold, (train_inds, test_inds) in enumerate(outer_cv.split(X, y)):
-        train_df = data_df.iloc[train_inds, :]
-        test_df = data_df.iloc[test_inds, :]
-
-        # Train model
-        predictor = TabularPredictor(
-            label=label_column,
-            path=f"./models/ag-binary-{dataset_name}-fold-{fold:02}",
-            problem_type="binary",
-            eval_metric="roc_auc",
-            learner_kwargs={"positive_class": "yes", "ignored_columns": id_columns},
-        )
-        predictor.fit(
-            # time_limit=10,
-            train_data=train_df,
-            presets="best_quality",
-            verbosity=0,
-        )
-
-        # Evaluate model on test data
-        y_pred = predictor.predict_proba(test_df.drop(columns=[label_column]))
-        y_true = test_df[label_column]
-        perf = predictor.evaluate_predictions(
-            y_true=y_true,
-            y_pred=y_pred,
-            auxiliary_metrics=True,
-            silent=True,
-            # detailed_report=True,
-        )
-        # Add fold and name to performance dictionary
-        perf["fold"] = fold
-        perf["dataset"] = dataset_name
-
-        # Show roc auc of each fold and dataset
-        score = perf.get("roc_auc")
-        print(f"ROC-AUC: {score:.4f}\tfold: {fold}\tdataset: {dataset_name}")
-
-        nested_scores.append(perf)
-    return nested_scores
 
 
 def main():
     label_column = "Photosensitation"
     id_columns = ["Substance", "Canonical_Smiles", "Set"]
 
-    datasets = [fname for fname in glob.glob("./data/pih_flatring.csv")]
+    datasets = [fname for fname in glob.glob("./data/pih_*.csv")]
     print("\nInput datasets:")
     print(datasets)
+
+    time_limit = 600
 
     results = []
     times = []
@@ -198,16 +140,15 @@ def main():
         data_df = TabularDataset(data=dataset_name)
         np.random.seed(0)
 
-        # Get name of the dataset
+        # Get basename of the dataset without extension
         base = os.path.basename(dataset_name)
         name = os.path.splitext(base)[0]
 
-        print("Starting:", name, data_df.shape)
+        print(f"Starting[{i}]: {name} {data_df.shape}")
         start = time.time()
-        # scores = evaluate_autogluon(
-        #     name, data_df, label_column, id_columns, n_splits=5
-        # )
-        scores = evaluate_autogluon_by_set(name, data_df, label_column, id_columns)
+        scores = evaluate_autogluon_by_set(
+            name, data_df, label_column, id_columns, time_limit
+        )
         results.extend(scores)
         elapsed = time.time() - start
         times.append(elapsed)
@@ -215,6 +156,7 @@ def main():
 
     print("\nResults:")
     # print(results)
+
     # Round results to 4 digits
     results = pd.DataFrame(results).round(4)
     reorder_cols = [
@@ -245,17 +187,8 @@ def main():
     }
 
     results = results[reorder_cols].rename(columns=rename_cols)
-    results.to_csv("results/time_split_results.csv", index=False)
-
-    # print("\nAggregated results:")
-    # # Calculate mean and std of the model metrics evaluated on different test sets for each dataset
-    # results_aggregated = (
-    #     results.drop(columns=["fold"]).groupby("dataset").agg(["mean", "std"]).round(4)
-    # )
-    # # Flatten MultiIndex columns from aggregation
-    # results_aggregated.columns = results_aggregated.columns.map("|".join).str.strip("|")
-    # print(results_aggregated)
-    # results_aggregated.to_csv("results/results_aggregated.csv")
+    results.to_csv("results/pih_time_split_results.csv", index=False)
+    print(results)
 
     print("\nModel times:")
     print(times)

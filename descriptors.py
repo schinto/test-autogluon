@@ -7,6 +7,20 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import DataStructs
 from rdkit.ML.Descriptors import MoleculeDescriptors
 
+from cats2d.rd_cats2d import CATS2D
+
+
+def calc_cats2d_descriptors(mols):
+    cats = CATS2D()
+    calc_desc = []
+    for mol in mols:
+        desc = cats.getCATs2D(mol)
+        calc_desc.append(np.asarray(desc))
+    calc_desc = np.asarray(calc_desc)
+    nBits = calc_desc[0].size
+    return calc_desc, [f"CATS:{x}" for x in range(nBits)]
+
+
 nms = [
     "MinAbsPartialCharge",
     "NumRadicalElectrons",
